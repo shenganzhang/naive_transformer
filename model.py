@@ -45,8 +45,8 @@ class RMSNorm(nn.Module):
         Returns:
             Normalized tensor, same shape and dtype as x.
         """
-        raise NotImplementedError("TODO: Implement RMSNorm forward pass")
-
+        rms = torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+        return x * rms * self.weight
 
 # ---------------------------------------------------------------------------
 # Exercise 4: Causal mask
