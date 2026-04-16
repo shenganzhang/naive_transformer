@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+import math
 
 from config import ModelConfig
 from rope import precompute_rope_frequencies, apply_rope
@@ -129,7 +131,13 @@ def scaled_dot_product_attention(
     Returns:
         Attention output — (batch, n_heads, seq_len_q, head_dim).
     """
-    raise NotImplementedError("TODO: Implement scaled_dot_product_attention")
+    d_k = q.shape[-1]
+    scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
+    if mask is not None:
+        scores = scores.masked_fill(mask, float("-inf"))
+    weights = F.softmax(scores.float(), dim=-1).type_as(q)
+    return weights @ v
+
 
 
 # ---------------------------------------------------------------------------
