@@ -81,7 +81,10 @@ def create_causal_mask(seq_len: int, device: torch.device = None) -> torch.Tenso
     Hint: torch.triu with diagonal=1 gives a matrix of ones above the main
           diagonal — exactly the positions that should be masked.
     """
-    raise NotImplementedError("TODO: Implement create_causal_mask")
+    return torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
+    if device is not None:
+        mask = mask.to(device)
+    return mask
 
 
 # ---------------------------------------------------------------------------
