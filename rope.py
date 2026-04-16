@@ -42,7 +42,11 @@ def precompute_rope_frequencies(
     Returns:
         Complex tensor of shape (max_seq_len, head_dim // 2).
     """
-    raise NotImplementedError("TODO: Implement precompute_rope_frequencies")
+    freqs = 1.0 / (theta ** (torch.arange(0, head_dim, 2).float() / head_dim))
+    t = torch.arange(max_seq_len)
+    angles = torch.outer(t, freqs)
+    freqs_cis = torch.polar(torch.ones_like(angles), angles)
+    return freqs_cis
 
 
 def apply_rope(x: torch.Tensor, freqs_cis: torch.Tensor) -> torch.Tensor:
@@ -83,4 +87,12 @@ def apply_rope(x: torch.Tensor, freqs_cis: torch.Tensor) -> torch.Tensor:
     Returns:
         Rotated tensor, same shape and dtype as x.
     """
-    raise NotImplementedError("TODO: Implement apply_rope")
+    x_pairs = x.float().reshape(*x.shape[:-1], -1, 2)
+    x_complex = torch.view_as_complex(x_pairs)
+    seq_len, head_dim_half = freqs_cis.shape
+    freqs_cis_reshaped = freqs_cis.reshape(1, seq_len, 1, head_dim_half)
+    x_rotated = x_complex * freqs_cis_reshaped
+    result = torch.view_as_real(x_rotated)
+    result = result.flatten(-2)
+    return result.type_as(x)
+
