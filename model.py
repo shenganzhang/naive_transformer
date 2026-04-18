@@ -225,7 +225,12 @@ class Attention(nn.Module):
             (keys, values) covering positions [0, start_pos + new_seq_len),
             each of shape (batch, end_pos, n_kv_heads, head_dim).
         """
-        raise NotImplementedError("TODO: Implement KV cache update")
+        seq_len = k.shape[1]
+        self.cache_k[:, start_pos : start_pos + seq_len] = k
+        self.cache_v[:, start_pos : start_pos + seq_len] = v
+        end_pos = start_pos + seq_len
+        return self.cache_k[:, :end_pos], self.cache_v[:, :end_pos]
+        
 
     # ---- Forward (provided — glues the exercises together) ----
 
@@ -306,7 +311,10 @@ class FeedForward(nn.Module):
         Returns:
             Output tensor of shape (..., dim).
         """
-        raise NotImplementedError("TODO: Implement SwiGLU feed-forward")
+        gate = F.silu(self.w1(x))
+        value = self.w3(x)
+        return self.w2(gate * value)
+        
 
 
 # ---------------------------------------------------------------------------

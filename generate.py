@@ -54,7 +54,19 @@ def top_k_top_p_filtering(
     Returns:
         Filtered logits (same shape), with excluded positions set to -inf.
     """
-    raise NotImplementedError("TODO: Implement top_k_top_p_filtering")
+    top_k = min(top_k, logits.size(-1))
+    if top_k > 0:
+        top_k_values, top_k_indices = torch.topk(logits, top_k, dim=-1)
+        logits = logits.masked_fill(logits < top_k_values[..., -1, None], float("-inf"))
+    if top_p < 1.0:
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
+        cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+        sorted_mask = cumulative_probs - F.softmax(sorted_logits, dim=-1) >= top_p
+        # scatter mask back to original token order before applying
+        mask = sorted_mask.scatter(dim=-1, index=sorted_indices, src=sorted_mask)
+        logits = logits.masked_fill(mask, float("-inf"))
+
+    return logits
 
 
 # ---------------------------------------------------------------------------
