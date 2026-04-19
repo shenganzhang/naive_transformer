@@ -17,6 +17,9 @@ env/
 # pytest
 .pytest_cache/
 
+# Checkpoints
+*.pt
+
 # Jupyter
 .ipynb_checkpoints/
 
